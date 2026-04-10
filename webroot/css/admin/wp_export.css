@@ -1,0 +1,14 @@
+/* 履歴テーブルのラッパー: 外枠ボーダー・スクロール・ヘッダ固定 */
+.bc-wp-export__scroll-table {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.bc-wp-export__scroll-table .bca-table-listup__thead-th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f5f5f5;
+}
