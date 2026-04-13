@@ -48,10 +48,11 @@ class WpExportService
         $jobToken = bin2hex(random_bytes(16));
         $outputFilename = 'basercms-wxr-' . date('Ymd-His') . '.xml';
         $outputPath = $tmpDir . $jobToken . '.xml';
+        $folders = $this->collectContentFolders($settings);
         $pages = $this->collectPages($settings);
         $posts = $this->collectPosts($settings);
         $summary = $this->buildSourceSummary($pages, $posts);
-        $pageItems = $this->buildPageItems($pages, $settings);
+        $pageItems = $this->buildPageItems($pages, $settings, $folders);
         $postItems = $this->buildPostItems($posts, count($pageItems) + 1, $settings);
 
         // include_media_urls が有効なときはアイキャッチを attachment アイテムとして追加し、
@@ -209,6 +210,28 @@ class WpExportService
     }
 
     /**
+     * エクスポート対象の ContentFolder（フォルダ型コンテンツ）を収集する
+     * site_root は WordPressに不要なため除外し、削除済みも除く
+     */
+    protected function collectContentFolders(array $settings): array
+    {
+        if ($settings['export_target'] === 'posts') {
+            return [];
+        }
+
+        $foldersTable = TableRegistry::getTableLocator()->get('BaserCore.ContentFolders');
+        return $foldersTable->find()
+            ->contain(['Contents'])
+            ->where([
+                'Contents.type' => 'ContentFolder',
+                'Contents.deleted_date IS' => null,
+                'Contents.site_root' => false,
+            ])
+            ->all()
+            ->toList();
+    }
+
+    /**
      * 設定条件に従って固定ページを DB から収集する
      */
     protected function collectPages(array $settings): array
@@ -338,13 +361,46 @@ class WpExportService
     /**
      * 固定ページ一覧を WXR item 配列に変換する（親子関係・URL絶対化を含む）
      */
-    protected function buildPageItems(array $pages, array $settings = []): array
+    /**
+     * ContentFolder と固定ページを WXR item 配列に変換する
+     *
+     * baserCMS のコンテンツ管理はフォルダ（ContentFolder）がページの親になる構造のため、
+     * フォルダも WordPress の「内容のないページ」としてエクスポートし wp:post_parent を正しく解決する。
+     * フォルダが先に ID を取得し、次にページが ID を取得することで親子関係が成立する。
+     *
+     * @param array $pages   BaserCore\Model\Entity\Page エンティティ配列
+     * @param array $settings エクスポート設定
+     * @param array $folders  BaserCore\Model\Entity\ContentFolder エンティティ配列（省略時は空）
+     */
+    protected function buildPageItems(array $pages, array $settings = [], array $folders = []): array
     {
         $siteUrl = !empty($settings['absolute_url']) ? rtrim((string) Configure::read('App.fullBaseUrl'), '/') : '';
 
-        // First pass: build content_id → sequential wp_post_id map
+        // フォルダの content_id → name=index のページ を引くマップを先に構築
+        // （フォルダとページが同じURLを共有するケースに対応）
+        $indexPageByFolderContentId = [];
+        foreach ($pages as $page) {
+            if (((string) ($page->content->name ?? '')) === 'index') {
+                $parentId = (int) ($page->content->parent_id ?? 0);
+                if ($parentId > 0) {
+                    $indexPageByFolderContentId[$parentId] = $page;
+                }
+            }
+        }
+
+        // index ページとしてマージ済みのページを除外するための content_id セット
+        $mergedPageContentIds = [];
+
+        // First pass: content_id → wp_post_id のマップを構築
+        // フォルダを先に登録し、ページの parent_id がフォルダを指していても解決できるようにする
         $contentIdMap = [];
         $postId = 1;
+        foreach ($folders as $folder) {
+            if (!empty($folder->content->id)) {
+                $contentIdMap[(int) $folder->content->id] = $postId;
+            }
+            $postId++;
+        }
         foreach ($pages as $page) {
             if (!empty($page->content->id)) {
                 $contentIdMap[(int) $page->content->id] = $postId;
@@ -352,29 +408,83 @@ class WpExportService
             $postId++;
         }
 
-        // Second pass: build items
         $items = [];
         $postId = 1;
+
+        // フォルダをスタブページとして出力
+        // name=index の子ページが存在する場合はその内容をフォルダのアイテムにマージし、
+        // 独立したアイテムとしては出力しない（WordPress では同一URLになるため）
+        foreach ($folders as $folder) {
+            $folderContentId = (int) ($folder->content->id ?? 0);
+            $parentContentId = (int) ($folder->content->parent_id ?? 0);
+
+            $indexPage = $indexPageByFolderContentId[$folderContentId] ?? null;
+            if ($indexPage !== null) {
+                // index ページの内容をフォルダスタブにマージ
+                $rawContent = (string) ($indexPage->contents ?? '');
+                $mergedPageContentIds[(int) ($indexPage->content->id ?? 0)] = true;
+                $items[] = [
+                    'wp_post_id'     => $postId,
+                    'wp_post_parent' => $contentIdMap[$parentContentId] ?? 0,
+                    'title'          => (string) ($indexPage->content->title ?? $folder->content->title ?? ''),
+                    'post_type'      => 'page',
+                    'post_status'    => !empty($indexPage->content->status) ? 'publish' : 'draft',
+                    'post_name'      => (string) ($folder->content->name ?? ''),
+                    'post_date'      => $this->formatDateTime($indexPage->created ?? $indexPage->modified ?? null),
+                    'post_date_gmt'  => $this->formatDateTime($indexPage->created ?? $indexPage->modified ?? null),
+                    'creator'        => '',
+                    'content'        => $siteUrl ? $this->absolutizeUrls($rawContent, $siteUrl) : $rawContent,
+                    'excerpt'        => '',
+                    'categories'     => [],
+                    'tags'           => [],
+                ];
+            } else {
+                // index ページなし → 内容のないスタブ
+                $items[] = [
+                    'wp_post_id'     => $postId,
+                    'wp_post_parent' => $contentIdMap[$parentContentId] ?? 0,
+                    'title'          => (string) ($folder->content->title ?? ''),
+                    'post_type'      => 'page',
+                    'post_status'    => 'publish',
+                    'post_name'      => (string) ($folder->content->name ?? ''),
+                    'post_date'      => $this->formatDateTime(null),
+                    'post_date_gmt'  => $this->formatDateTime(null),
+                    'creator'        => '',
+                    'content'        => '',
+                    'excerpt'        => '',
+                    'categories'     => [],
+                    'tags'           => [],
+                ];
+            }
+            $postId++;
+        }
+
+        // 固定ページを出力（フォルダにマージされた index ページは除く）
         foreach ($pages as $page) {
+            $pageContentId = (int) ($page->content->id ?? 0);
+            if (isset($mergedPageContentIds[$pageContentId])) {
+                continue; // フォルダスタブにマージ済みのためスキップ
+            }
             $parentContentId = (int) ($page->content->parent_id ?? 0);
             $rawContent = (string) ($page->contents ?? '');
             $items[] = [
-                'wp_post_id' => $postId,
+                'wp_post_id'     => $postId,
                 'wp_post_parent' => $contentIdMap[$parentContentId] ?? 0,
-                'title' => (string) ($page->content->title ?? ''),
-                'post_type' => 'page',
-                'post_status' => !empty($page->content->status) ? 'publish' : 'draft',
-                'post_name' => (string) ($page->content->name ?? ''),
-                'post_date' => $this->formatDateTime($page->created ?? $page->modified ?? null),
-                'post_date_gmt' => $this->formatDateTime($page->created ?? $page->modified ?? null),
-                'creator' => '',
-                'content' => $siteUrl ? $this->absolutizeUrls($rawContent, $siteUrl) : $rawContent,
-                'excerpt' => '',
-                'categories' => [],
-                'tags' => [],
+                'title'          => (string) ($page->content->title ?? ''),
+                'post_type'      => 'page',
+                'post_status'    => !empty($page->content->status) ? 'publish' : 'draft',
+                'post_name'      => (string) ($page->content->name ?? ''),
+                'post_date'      => $this->formatDateTime($page->created ?? $page->modified ?? null),
+                'post_date_gmt'  => $this->formatDateTime($page->created ?? $page->modified ?? null),
+                'creator'        => '',
+                'content'        => $siteUrl ? $this->absolutizeUrls($rawContent, $siteUrl) : $rawContent,
+                'excerpt'        => '',
+                'categories'     => [],
+                'tags'           => [],
             ];
             $postId++;
         }
+
         return $items;
     }
 

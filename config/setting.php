@@ -17,7 +17,8 @@ return [
         ],
     ],
     'BcWpExport' => [
-        'jobExpireDays' => 3,
-        'batchSize' => 100,
+        // エクスポートジョブの有効期限（日数）
+        // ジョブ作成時に expires_at へ記録される。クリーンアップコマンドは未実装
+        'jobExpireDays' => 14,
     ],
 ];
