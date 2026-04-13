@@ -66,6 +66,11 @@ BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/pr
 - `tests/TestCase/Service/WxrWriterServiceTest.php`
   - `testBuildEmptyDocument` — 空ドキュメントの RSS タグ確認
   - `testBuildDocument` — authors / items / categories / summary を含む完全なWXR生成確認
+- `tests/TestCase/Service/WxrWriterServiceTest.php` に追加済み
+  - `testBuildDocumentAttachmentItem` — `attachment` post_type・`wp:attachment_url`・`_thumbnail_id` postmeta
+  - `testBuildDocumentPageHierarchy` — 親子ページの `wp:post_parent`
+- `tests/TestCase/Service/WpExportServiceTest.php`
+  - `absolutizeUrls` の各ケース（ルート相対URL・src属性・絶対URL非変換・プロトコル相対URL非変換・空 siteUrl・末尾スラッシュ・複数箇所）
 
 ---
 
@@ -73,15 +78,14 @@ BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/pr
 
 ### v1.0 向け（必須）
 
-- [ ] Docker コンテナ内でユニットテストを実行して実動作確認（`WxrWriterServiceTest` の実行）
-- [ ] `WxrWriterServiceTest` にケースを追加
+- [x] Docker コンテナ内でユニットテストを実行して実動作確認（`WxrWriterServiceTest` の実行）
+- [x] `WxrWriterServiceTest` にケースを追加
   - [x] ページ親子関係（`wp:post_parent`）— ContentFolder をスタブページとして含め、フォルダ階層を wp:post_parent で正確に表現
-  - アタッチメントアイテム（`attachment` post_type）
-  - `absolutizeUrls` のエッジケース（プロトコル相対URL等）
+  - [x] アタッチメントアイテム（`attachment` post_type・`wp:attachment_url`・`_thumbnail_id` postmeta）
 
 ### v1.1以降（テスト拡充）
 
-- [ ] `WpExportServiceTest` の作成（モックを使ったユニットテスト）
+- [x] `WpExportServiceTest` の作成 — `absolutizeUrls` の各ケース（ルート相対URL・src属性・絶対URL非変換・プロトコル相対URL非変換・空 siteUrl・末尾スラッシュ・複数箇所）
 - [ ] `WpExportsControllerTest` の作成
 
 ### 将来対応（大量データ・非同期処理）
@@ -111,4 +115,4 @@ BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/pr
 - `absolutizeUrls` はルート相対URL（`/path`）のみ対応。プロトコル相対URL（`//example.com`）への対応はv1.1以降。
 - `source_summary` のキーは `pages` / `posts` / `categories` / `tags` / `authors` / `total_items`。
 - 履歴テーブルの日時は PHP・JS ともに `Y-m-d H:i:s` 形式で統一（ISO 8601 を変換）。
-- エディタ上の静的解析エラーなし。Docker コンテナ内での実行テストは未実施。
+- `WxrWriterServiceTest` / `WpExportServiceTest` は Docker コンテナ内で実行済み（11 tests, 28 assertions）。

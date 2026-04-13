@@ -20,11 +20,14 @@ class WxrWriterService
 
         $rss = $document->createElement('rss');
         $rss->setAttribute('version', '2.0');
-        $rss->setAttribute('xmlns:excerpt', 'http://wordpress.org/export/1.2/excerpt/');
-        $rss->setAttribute('xmlns:content', 'http://purl.org/rss/1.0/modules/content/');
-        $rss->setAttribute('xmlns:wfw', 'http://wellformedweb.org/CommentAPI/');
-        $rss->setAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/');
-        $rss->setAttribute('xmlns:wp', 'http://wordpress.org/export/1.2/');
+        // setAttributeNS で xmlns 名前空間に正しく登録することで、
+        // createElementNS で生成した子要素が各自で xmlns: を再宣言しなくなる
+        $xmlnsNs = 'http://www.w3.org/2000/xmlns/';
+        $rss->setAttributeNS($xmlnsNs, 'xmlns:excerpt', 'http://wordpress.org/export/1.2/excerpt/');
+        $rss->setAttributeNS($xmlnsNs, 'xmlns:content', 'http://purl.org/rss/1.0/modules/content/');
+        $rss->setAttributeNS($xmlnsNs, 'xmlns:wfw',     'http://wellformedweb.org/CommentAPI/');
+        $rss->setAttributeNS($xmlnsNs, 'xmlns:dc',      'http://purl.org/dc/elements/1.1/');
+        $rss->setAttributeNS($xmlnsNs, 'xmlns:wp',      'http://wordpress.org/export/1.2/');
         $document->appendChild($rss);
 
         $channel = $document->createElement('channel');
