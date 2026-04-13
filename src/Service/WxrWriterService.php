@@ -32,7 +32,9 @@ class WxrWriterService
 
         $channel = $document->createElement('channel');
         $rss->appendChild($channel);
-        $channel->appendChild($document->createElement('title', (string) ($context['channel_title'] ?? 'baserCMS Export')));
+        $channelTitleEl = $document->createElement('title');
+        $channelTitleEl->appendChild($document->createTextNode((string) ($context['channel_title'] ?? 'baserCMS Export')));
+        $channel->appendChild($channelTitleEl);
         $channel->appendChild($document->createElement('language', (string) ($context['language'] ?? 'ja')));
         $channel->appendChild($document->createElement('wp:wxr_version', '1.2'));
         $channel->appendChild($document->createElement('generator', 'BcWpExport'));
@@ -60,7 +62,9 @@ class WxrWriterService
 
         foreach ($context['items'] ?? [] as $item) {
             $itemNode = $document->createElement('item');
-            $itemNode->appendChild($document->createElement('title', (string) ($item['title'] ?? '')));
+            $itemTitleEl = $document->createElement('title');
+            $itemTitleEl->appendChild($document->createTextNode((string) ($item['title'] ?? '')));
+            $itemNode->appendChild($itemTitleEl);
             $itemNode->appendChild($document->createElement('pubDate', date(DATE_RSS, strtotime((string) ($item['post_date'] ?? 'now')))));
             $this->appendCdataElement($document, $itemNode, 'dc:creator', 'http://purl.org/dc/elements/1.1/', (string) ($item['creator'] ?? ''));
             $this->appendCdataElement($document, $itemNode, 'content:encoded', 'http://purl.org/rss/1.0/modules/content/', (string) ($item['content'] ?? ''));
