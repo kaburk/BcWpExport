@@ -18,7 +18,7 @@ return [
     ],
     'BcWpExport' => [
         // エクスポートジョブの有効期限（日数）
-        // ジョブ作成時に expires_at へ記録される。クリーンアップコマンドは未実装
+        // ジョブ作成時に expires_at へ記録され、BcWpExport.cleanup が期限切れを削除する
         'jobExpireDays' => 14,
     ],
 ];
