@@ -1,8 +1,9 @@
 # BcWpExport 進捗・残件メモ
 
-更新日: 2026-04-11
+更新日: 2026-04-13
 
-BcWpImport と合わせた全体の進捗は [BcWpImport/docs/progress.md](../../BcWpImport/docs/progress.md) を参照。
+BcWpExport の実装状況と残件のみを記録する。  
+BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/progress.md) を参照。
 
 ---
 
@@ -74,7 +75,7 @@ BcWpImport と合わせた全体の進捗は [BcWpImport/docs/progress.md](../..
 
 - [ ] Docker コンテナ内でユニットテストを実行して実動作確認（`WxrWriterServiceTest` の実行）
 - [ ] `WxrWriterServiceTest` にケースを追加
-  - ページ親子関係（`wp:post_parent`）
+  - [x] ページ親子関係（`wp:post_parent`）— ContentFolder をスタブページとして含め、フォルダ階層を wp:post_parent で正確に表現
   - アタッチメントアイテム（`attachment` post_type）
   - `absolutizeUrls` のエッジケース（プロトコル相対URL等）
 
@@ -88,6 +89,12 @@ BcWpImport と合わせた全体の進捗は [BcWpImport/docs/progress.md](../..
 - [ ] `status` / `cancel` アクション追加（現状は同期処理のため不要、大量データ時の非同期化の際に追加）
 - [ ] Chunked / resumable export（分割生成対応）
 - [ ] 除外項目レポートCSVの生成・ダウンロード（`warning_log_path` / `error_log_path` の活用）
+- [ ] ジョブクリーンアップコマンドの実装 — `expires_at` を参照して期限切れジョブ（XML ファイル・DB レコード）を一括削除する `bin/cake BcWpExport.cleanup` コマンド
+
+### コンテンツタイプ拡張（将来対応）
+
+- [ ] **コンテンツリンク（ContentLink）対応** — `wp:post_type=page` に外部リンク URL を postmeta として含める形でエクスポート予定
+- [ ] **カスタムコンテンツ（CustomContent）対応** — WordPress の Custom Post Type としてエクスポート予定（フィールド定義を postmeta にマッピング）
 
 ### サービス分離（設計推奨・低優先度）
 
