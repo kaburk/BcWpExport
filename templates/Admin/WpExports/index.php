@@ -266,13 +266,13 @@ $csrfToken = $this->request->getAttribute('csrfToken');
             data-bca-target="#js-history-body"
             aria-expanded="false"
             aria-controls="js-history-body">
-        <?= __d('baser_core', '過去のエクスポート履歴') ?>&nbsp;&nbsp;<i class="bca-icon--chevron-down bca-collapse__btn-icon"></i>
+        <?= __d('baser_core', '最近の履歴') ?>&nbsp;&nbsp;<i class="bca-icon--chevron-down bca-collapse__btn-icon"></i>
     </button>
 </div>
 <div class="bca-collapse" id="js-history-body" data-bca-state="" style="display:none;">
     <section class="bca-section" data-bca-section-type="form-group">
         <?php if (empty($historyJobs)): ?>
-        <p class="bca-form__note" id="js-history-empty"><?= __d('baser_core', '過去のエクスポート履歴はありません。') ?></p>
+        <p class="bca-form__note" id="js-history-empty"><?= __d('baser_core', '最近の履歴はありません。') ?></p>
         <?php endif; ?>
         <div class="bc-wp-export__scroll-table">
         <table class="bca-table-listup" id="js-history-table"<?= empty($historyJobs) ? ' style="display:none;"' : '' ?>>
