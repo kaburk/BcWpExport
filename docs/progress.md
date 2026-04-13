@@ -1,6 +1,6 @@
 # BcWpExport 進捗・残件メモ
 
-更新日: 2026-04-13
+更新日: 2026-04-14
 
 BcWpExport の実装状況と残件のみを記録する。  
 BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/progress.md) を参照。
@@ -26,6 +26,7 @@ BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/pr
 
 ### サービス
 - `WxrWriterService` — DOMDocument を使ったWXR XML生成（名前空間・CDATA・整形・postmeta対応）
+  - title 要素は `createTextNode()` で出力し、`&` などの特殊文字を正しくエスケープ
 - `WpExportService`
   - `createJob` — 設定受取 → データ収集 → WXR生成 → ジョブ保存（同期一括処理）
   - `getJobByToken` — ダウンロード用ジョブ取得
@@ -124,6 +125,7 @@ BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/pr
 
 - `WpExportService::createJob` は同期で一括実行（ジョブは即 `completed` になる）。`status` / `cancel` アクションは非同期化が必要になった時点で追加する。
 - WXR の XML 生成は DOMDocument + namespaced element を使用（`content:encoded` / `dc:creator` / `wp:*` 各要素）。
+- BcWpImport 互換のため、テキスト系要素は XML として妥当になるよう明示的に text node で出力する。
 - `include_media_urls` が有効な場合はブログ記事のアイキャッチを `attachment` post_type として items に追加し、親記事に `_thumbnail_id` postmeta を付与する。
 - `absolutizeUrls` はルート相対URL（`/path`）のみ対応。プロトコル相対URL（`//example.com`）への対応はv1.1以降。
 - `source_summary` のキーは `pages` / `posts` / `categories` / `tags` / `authors` / `total_items`。
