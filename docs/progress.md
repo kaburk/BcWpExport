@@ -14,6 +14,9 @@ BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/pr
 - Migration: `CreateBcWpExportJobs`
 - Entity: `BcWpExportJob` / Table: `BcWpExportJobsTable`
 
+### コマンド
+- `BcWpExport.cleanup` — `expires_at` を過ぎたジョブの XML / warning_log / excluded_report と DB レコードを一括削除（`--dry-run` 対応）
+
 ### コントローラ（`WpExportsController`）
 - `index` — ジョブ一覧画面表示
 - `create` — エクスポート条件を受け取りWXR生成・ジョブ保存（同期）
@@ -71,6 +74,16 @@ BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/pr
   - `testBuildDocumentPageHierarchy` — 親子ページの `wp:post_parent`
 - `tests/TestCase/Service/WpExportServiceTest.php`
   - `absolutizeUrls` の各ケース（ルート相対URL・src属性・絶対URL非変換・プロトコル相対URL非変換・空 siteUrl・末尾スラッシュ・複数箇所）
+- `tests/TestCase/Controller/Admin/WpExportsControllerTest.php`
+  - `testIndex` — 一覧画面の view 変数と履歴ジョブ表示
+  - `testCreate` — エクスポート要求から completed ジョブと出力ファイル生成
+  - `testDownload` — 完了ジョブの XML ダウンロード
+  - `testDelete` — 個別削除でファイルと DB レコードを除去
+  - `testDeleteAll` — 一括削除で複数ファイルと DB レコードを除去
+- `tests/TestCase/Command/CleanupCommandTest.php`
+  - `testExecuteReturnsWhenNoExpiredJobs` — 対象なし時の正常終了
+  - `testExecuteDryRunDoesNotDeleteExpiredJobs` — dry-run では削除せず件数のみ表示
+  - `testExecuteDeletesExpiredJobsAndFiles` — 期限切れジョブと関連ファイルの削除
 
 ---
 
@@ -86,14 +99,14 @@ BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/pr
 ### v1.1以降（テスト拡充）
 
 - [x] `WpExportServiceTest` の作成 — `absolutizeUrls` の各ケース（ルート相対URL・src属性・絶対URL非変換・プロトコル相対URL非変換・空 siteUrl・末尾スラッシュ・複数箇所）
-- [ ] `WpExportsControllerTest` の作成
+- [x] `WpExportsControllerTest` の作成 — `index` / `create` / `download` / `delete` / `delete_all`
 
 ### 将来対応（大量データ・非同期処理）
 
 - [ ] `status` / `cancel` アクション追加（現状は同期処理のため不要、大量データ時の非同期化の際に追加）
 - [ ] Chunked / resumable export（分割生成対応）
 - [ ] 除外項目レポートCSVの生成・ダウンロード（`warning_log_path` / `error_log_path` の活用）
-- [ ] ジョブクリーンアップコマンドの実装 — `expires_at` を参照して期限切れジョブ（XML ファイル・DB レコード）を一括削除する `bin/cake BcWpExport.cleanup` コマンド
+- [x] ジョブクリーンアップコマンドの実装 — `expires_at` を参照して期限切れジョブ（XML ファイル・DB レコード）を一括削除する `bin/cake BcWpExport.cleanup` コマンド
 
 ### コンテンツタイプ拡張（将来対応）
 
@@ -115,4 +128,5 @@ BcWpImport 側は [plugins/BcWpImport/docs/progress.md](../../BcWpImport/docs/pr
 - `absolutizeUrls` はルート相対URL（`/path`）のみ対応。プロトコル相対URL（`//example.com`）への対応はv1.1以降。
 - `source_summary` のキーは `pages` / `posts` / `categories` / `tags` / `authors` / `total_items`。
 - 履歴テーブルの日時は PHP・JS ともに `Y-m-d H:i:s` 形式で統一（ISO 8601 を変換）。
-- `WxrWriterServiceTest` / `WpExportServiceTest` は Docker コンテナ内で実行済み（11 tests, 28 assertions）。
+- `BcWpExport.cleanup` は `--dry-run` をサポートし、`output_path` / `warning_log_path` / `excluded_report_path` を削除対象に含める。
+- `CleanupCommandTest` / `WxrWriterServiceTest` / `WpExportServiceTest` / `WpExportsControllerTest` は Docker コンテナ内で実行済み（19 tests, 69 assertions）。
