@@ -12,7 +12,7 @@ $adminBase = '/baser/admin/bc-wp-export/wp_exports';
 $csrfToken = $this->request->getAttribute('csrfToken');
 ?>
 
-<link rel="stylesheet" href="/bc_wp_export/css/admin/wp_export.css">
+<?php $this->BcBaser->css('BcWpExport.admin/wp_export', ['block' => true]) ?>
 
 <?php if (!empty($pendingJobs)): ?>
 <section class="bca-section" data-bca-section-type="form-group" id="js-pending-section">
@@ -78,14 +78,18 @@ $csrfToken = $this->request->getAttribute('csrfToken');
     </table>
 
     <div class="bca-collapse__action">
-        <button type="button"
-                class="bca-collapse__btn"
-                data-bca-collapse="collapse"
-                data-bca-target="#js-filter-body"
-                aria-expanded="false"
-                aria-controls="js-filter-body">
-            <?= __d('baser_core', 'フィルタ条件') ?>&nbsp;&nbsp;<i class="bca-icon--chevron-down bca-collapse__btn-icon"></i>
-        </button>
+        <?= $this->BcAdminForm->button(
+            __d('baser_core', 'フィルタ条件') . '&nbsp;&nbsp;<i class="bca-icon--chevron-down bca-collapse__btn-icon"></i>',
+            [
+                'type' => 'button',
+                'class' => 'bca-collapse__btn',
+                'data-bca-collapse' => 'collapse',
+                'data-bca-target' => '#js-filter-body',
+                'aria-expanded' => 'false',
+                'aria-controls' => 'js-filter-body',
+                'escapeTitle' => false,
+            ]
+        ) ?>
     </div>
     <div class="bca-collapse" id="js-filter-body" data-bca-state="" style="display:none;">
         <p class="bca-form__note"><?= __d('baser_core', '指定なしの場合はすべてが対象になります。') ?></p>
@@ -148,14 +152,18 @@ $csrfToken = $this->request->getAttribute('csrfToken');
     </div>
 
     <div class="bca-collapse__action">
-        <button type="button"
-                class="bca-collapse__btn"
-                data-bca-collapse="collapse"
-                data-bca-target="#js-option-body"
-                aria-expanded="false"
-                aria-controls="js-option-body">
-            <?= __d('baser_core', '出力オプション') ?>&nbsp;&nbsp;<i class="bca-icon--chevron-down bca-collapse__btn-icon"></i>
-        </button>
+        <?= $this->BcAdminForm->button(
+            __d('baser_core', '出力オプション') . '&nbsp;&nbsp;<i class="bca-icon--chevron-down bca-collapse__btn-icon"></i>',
+            [
+                'type' => 'button',
+                'class' => 'bca-collapse__btn',
+                'data-bca-collapse' => 'collapse',
+                'data-bca-target' => '#js-option-body',
+                'aria-expanded' => 'false',
+                'aria-controls' => 'js-option-body',
+                'escapeTitle' => false,
+            ]
+        ) ?>
     </div>
     <div class="bca-collapse" id="js-option-body" data-bca-state="" style="display:none;">
         <table class="form-table bca-form-table" data-bca-table-type="type2">
@@ -212,9 +220,14 @@ $csrfToken = $this->request->getAttribute('csrfToken');
     <div class="bca-actions">
         <div class="bca-actions__before"></div>
         <div class="bca-actions__main">
-            <button id="js-create-export-btn" class="bca-btn bca-actions__item" data-bca-btn-type="save" data-bca-btn-size="lg" data-bca-btn-width="lg">
-                <?= __d('baser_core', 'WXR を生成') ?>
-            </button>
+            <?= $this->BcAdminForm->button(__d('baser_core', 'WXR を生成'), [
+                'type' => 'button',
+                'id' => 'js-create-export-btn',
+                'class' => 'bca-btn bca-actions__item',
+                'data-bca-btn-type' => 'save',
+                'data-bca-btn-size' => 'lg',
+                'data-bca-btn-width' => 'lg',
+            ]) ?>
         </div>
         <div class="bca-actions__sub"></div>
     </div>
@@ -254,20 +267,28 @@ $csrfToken = $this->request->getAttribute('csrfToken');
             </a>
         </div>
         <div class="bca-actions__sub">
-            <button id="js-restart-btn" class="bca-btn bca-actions__item"><?= __d('baser_core', '別のエクスポートを実行') ?></button>
+            <?= $this->BcAdminForm->button(__d('baser_core', '別のエクスポートを実行'), [
+                'type' => 'button',
+                'id' => 'js-restart-btn',
+                'class' => 'bca-btn bca-actions__item',
+            ]) ?>
         </div>
     </div>
 </section>
 
 <div class="bca-collapse__action" id="js-history-collapse-action">
-    <button type="button"
-            class="bca-collapse__btn"
-            data-bca-collapse="collapse"
-            data-bca-target="#js-history-body"
-            aria-expanded="false"
-            aria-controls="js-history-body">
-        <?= __d('baser_core', '最近の履歴') ?>&nbsp;&nbsp;<i class="bca-icon--chevron-down bca-collapse__btn-icon"></i>
-    </button>
+    <?= $this->BcAdminForm->button(
+        __d('baser_core', '最近の履歴') . '&nbsp;&nbsp;<i class="bca-icon--chevron-down bca-collapse__btn-icon"></i>',
+        [
+            'type' => 'button',
+            'class' => 'bca-collapse__btn',
+            'data-bca-collapse' => 'collapse',
+            'data-bca-target' => '#js-history-body',
+            'aria-expanded' => 'false',
+            'aria-controls' => 'js-history-body',
+            'escapeTitle' => false,
+        ]
+    ) ?>
 </div>
 <div class="bca-collapse" id="js-history-body" data-bca-state="" style="display:none;">
     <section class="bca-section" data-bca-section-type="form-group">
@@ -301,7 +322,13 @@ $csrfToken = $this->request->getAttribute('csrfToken');
                     <td class="bca-table-listup__tbody-td"><?= h($job->output_filename ?: '-') ?></td>
                     <td class="bca-table-listup__tbody-td"><?= h(isset($job->expires_at) ? (new DateTime((string)$job->expires_at))->format('Y-m-d H:i:s') : '-') ?></td>
                     <td class="bca-table-listup__tbody-td bca-table-listup__tbody-td--actions">
-                        <?php if ($job->output_path && file_exists((string)$job->output_path)): ?><a href="<?= h($adminBase . '/download/' . $job->job_token) ?>" class="bca-btn bca-actions__item" data-bca-btn-type="download"><?= __d('baser_core', 'ダウンロード') ?></a><?php endif; ?><button type="button" class="bca-btn bca-actions__item js-history-delete-btn" data-bca-btn-type="delete" data-job-token="<?= h($job->job_token) ?>"><?= __d('baser_core', '削除') ?></button>
+                        <?php if ($job->output_path && file_exists((string)$job->output_path)): ?><a href="<?= h($adminBase . '/download/' . $job->job_token) ?>" class="bca-btn bca-actions__item" data-bca-btn-type="download"><?= __d('baser_core', 'ダウンロード') ?></a><?php endif; ?>
+                        <?= $this->BcAdminForm->button(__d('baser_core', '削除'), [
+                            'type' => 'button',
+                            'class' => 'bca-btn bca-actions__item js-history-delete-btn',
+                            'data-bca-btn-type' => 'delete',
+                            'data-job-token' => $job->job_token,
+                        ]) ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -311,9 +338,13 @@ $csrfToken = $this->request->getAttribute('csrfToken');
         <div class="bca-actions" id="js-history-bulk-actions" style="<?= empty($historyJobs) ? 'display:none;' : '' ?>">
             <div class="bca-actions__before"></div>
             <div class="bca-actions__main">
-                <button type="button" id="js-history-delete-all-btn" class="bca-btn bca-actions__item" data-bca-btn-type="delete" disabled>
-                    <?= __d('baser_core', '選択した履歴を削除') ?>
-                </button>
+                <?= $this->BcAdminForm->button(__d('baser_core', '選択した履歴を削除'), [
+                    'type' => 'button',
+                    'id' => 'js-history-delete-all-btn',
+                    'class' => 'bca-btn bca-actions__item',
+                    'data-bca-btn-type' => 'delete',
+                    'disabled' => true,
+                ]) ?>
             </div>
             <div class="bca-actions__sub"></div>
         </div>
