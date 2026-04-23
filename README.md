@@ -107,4 +107,4 @@ BcWpExport は、baserCMS5 のコンテンツを WordPress 向け WXR（WordPres
 
 ## ライセンス
 
-MIT License
+MIT License. 詳細は `LICENSE.txt` を参照してください。
